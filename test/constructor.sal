@@ -1,0 +1,7 @@
+ctor0: func {{ }}
+
+ctor1: func {{ p: { } }}
+
+ctor2: func {{{}}}
+
+ctor2: func {{{}{}}}

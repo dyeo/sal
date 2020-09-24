@@ -1,0 +1,21 @@
+from std/io take print
+
+fizzbuzz: func(value)
+{
+	; cast to integer
+	i: value->int
+	ret 
+		if i % 15 = 0 { "FizzBuzz" }
+		elif i % 3 = 0 { "Fizz" }
+		elif i % 5 = 0 { "Buzz" }
+		else { str(i) }
+}
+
+; plays the game fizzbuzz
+fizzbuzz_main: func
+{
+	for i in range(1, 100)
+	{
+		i->fizzbuzz->print
+	}
+}

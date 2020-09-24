@@ -1,0 +1,4 @@
+func0: func { }
+func1: func() { }
+func2: func(a) { }
+func3: func(a, b) { }

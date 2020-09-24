@@ -1,0 +1,4 @@
+piping0: a->b
+piping1: (a.a)->b
+piping2: "string"->b
+piping3: a.b()->(c.d)->e

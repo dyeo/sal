@@ -1,0 +1,7 @@
+from std/io take print
+
+; prints a simple hello world to the console
+helloworld: func
+{
+	"Hello world!"->print
+}

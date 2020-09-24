@@ -1,0 +1,11 @@
+from std/io take input print
+
+main: func
+{
+	age: input("What is your age?")->num
+	if age = num.nan { "That's not a number!" }
+	elif age < 0 { "You cannot be less than zero!" }
+	elif age > 100 { "That's old!" }
+	else { "You're " + age + " years old." }
+	->print
+}
