@@ -89,12 +89,12 @@ typedef struct __token
 {
 	unsigned short value;
 	unsigned int line;
-	unsigned int col_start, col_end;
+	unsigned int col;
 	char *data;
 } 
 token;
 
-token *make_token(unsigned short value, unsigned int line, unsigned int col_start, unsigned int col_end, char *data);
+token *make_token(unsigned short value, unsigned int line, unsigned int col, char *data);
 
 #ifdef __cplusplus
 }

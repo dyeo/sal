@@ -15,7 +15,7 @@ lex_state* make_lex_state(const char *filename, char* buffer)
 		r->status = LEXER_IN_PROGRESS;
 		r->buffer = buffer;
 		r->buffer_end = buffer + strlen(buffer);
-		r->total_lines = count_chars(buffer, '\n');
+		r->total_lines = count_chars(buffer, '\n') + 1;
 		r->curr = buffer;
 		r->line = 1;
 		r->tokens = 0;
@@ -98,6 +98,7 @@ void parse_next_token(lex_state *s)
 	
 	while(token = *s->curr)
 	{
+		// ignore new lines
 		if(token == '\r' && *(s->curr+1) == '\n')
 		{
 			++s->line;
@@ -107,12 +108,44 @@ void parse_next_token(lex_state *s)
 		{
 			++s->line;
 		}
+		
+		// ignore comments up until newline
+		if(token == ';')
+		{
+			while(token = *s->curr)
+			{
+				if(token == '\r' && *(s->curr+1) == '\n')
+				{
+					++s->curr;
+					break;
+				}
+				else if (token == '\r' || token == '\n')
+				{
+					++s->line;
+					break;
+				}
+				++s->curr;
+			}
+			++s->line;
+		}
 	
-		//if *curr is_ident_start:
-		//	set temp to curr+1
-		//	while *temp is_ident_char:
-		//		++temp
-		//	set ident to string from curr to temp
+		// beginning of identifier found
+		if(is_ident_start(token))
+		{
+			// begin scanning until the end of the identifier
+			char *temp = s->curr;
+			do
+			{
+				++temp;
+			}
+			while(is_ident_char(*temp));
+			// copy identifier out of buffer to store later
+			char *ident = substr(s->curr, temp);
+			log_debug(s->filename, s->line, "identifier found: %s", ident);
+			free(ident);
+			
+			s->curr = temp;
+		}
 		//	if curr:temp in keywords:
 		//		make keyword token from ident
 		//	else
