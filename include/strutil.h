@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
-#include "string.h"
-#include "stdbool.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 static inline
 int count_chars(const char *str, char chr)

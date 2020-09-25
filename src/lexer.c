@@ -36,7 +36,7 @@ void parse_next_token(lex_state *state);
 //
 //
 lex_state *lexize_from_file(const char *filename)
-{
+{	
 	log_debug(filename, 0, "lexing file...");
 	
 	FILE    *infile;
@@ -79,6 +79,29 @@ lex_state *lexize_from_file(const char *filename)
 	return NULL;
 }
 
+bool skip_newline(lex_state *s)
+{
+	if(*(s->curr) == '\r' && *(s->curr+1) == '\n')
+	{
+		++s->line;
+		++s->curr;
+		return true;
+	}
+	else if (*(s->curr) == '\r' || *(s->curr) == '\n')
+	{
+		++s->line;
+		return true;
+	}
+	return false;
+}
+
+bool is_escape(char c, char n)
+{
+	return c == '\\' && (strchr("abfnrtv\\\'\"\?", n) != NULL);
+}
+
+
+
 bool is_ident_start(char c)
 {
 	return c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
@@ -99,34 +122,42 @@ void parse_next_token(lex_state *s)
 	while(token = *s->curr)
 	{
 		// ignore new lines
-		if(token == '\r' && *(s->curr+1) == '\n')
+		if(skip_newline(s))
 		{
-			++s->line;
 			++s->curr;
-		}
-		else if (token == '\r' || token == '\n')
-		{
-			++s->line;
+			return;
 		}
 		
 		// ignore comments up until newline
 		if(token == ';')
 		{
-			while(token = *s->curr)
+			while(!skip_newline(s))
 			{
-				if(token == '\r' && *(s->curr+1) == '\n')
-				{
-					++s->curr;
-					break;
-				}
-				else if (token == '\r' || token == '\n')
-				{
-					++s->line;
-					break;
-				}
 				++s->curr;
 			}
-			++s->line;
+			++s->curr;
+			return;
+		}
+	
+		// beginning of string found
+		if(token == '"')
+		{
+			char *temp = s->curr;
+			do
+			{
+				++temp;
+				if(is_escape(*temp, *(temp+1)))
+				{
+					temp+=2;
+				}
+			}		
+			while(*temp != '"');
+			++temp;
+			char *string = substr(s->curr+1, temp-1);
+			log_debug(s->filename, s->line, "STRING:\t%s", string);
+			free(string);
+			s->curr = temp;
+			return;
 		}
 	
 		// beginning of identifier found
@@ -141,10 +172,27 @@ void parse_next_token(lex_state *s)
 			while(is_ident_char(*temp));
 			// copy identifier out of buffer to store later
 			char *ident = substr(s->curr, temp);
-			log_debug(s->filename, s->line, "identifier found: %s", ident);
+			// determine if this is a reserved keyword
+			bool is_symbol = true;
+			for(int i=0;i<NUM_KEYWORDS;++i)
+			{
+				if(strcmp(ident,keywords[i]) == 0)
+				{
+					log_debug(s->filename, s->line, "KYWORD:\t%i\t(%s)", TK_KEYWORDS_START+i, ident);
+					is_symbol = false;
+					break;
+				}
+			}
+			
+			if(is_symbol)
+			{
+				log_debug(s->filename, s->line, "SYMBOL:\t%i\t(%s)", TK_SYMBOL, ident);
+			}
+			
 			free(ident);
 			
 			s->curr = temp;
+			return;
 		}
 		//	if curr:temp in keywords:
 		//		make keyword token from ident

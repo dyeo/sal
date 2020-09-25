@@ -5,7 +5,7 @@ fizzbuzz: func(value)
 	; cast to integer
 	i: value->int
 	ret 
-		if i % 15 = 0 { "FizzBuzz" }
+		if i % 15 = 0 { "Fizz\"Buzz" }
 		elif i % 3 = 0 { "Fizz" }
 		elif i % 5 = 0 { "Buzz" }
 		else { str(i) }

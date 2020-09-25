@@ -5,58 +5,65 @@ extern "C" {
 #endif
 
 // assignment operator
-#define TK_ASSIGN	0	// :
-#define TK_DOT		1	// .
-#define TK_PIPE		2	// ->
-#define TK_MULT		3	// *
-#define TK_DIV		4	// /
-#define TK_MOD		5	// %
-#define TK_ADD		6	// +
-#define TK_SUB		7	// -    
-#define TK_LSHFT	8	// <<
-#define TK_RSHFT	9	// >>
-#define TK_LESS		10	// <
-#define TK_LESSEQ	11	// <=
-#define TK_GRTR		12	// >
-#define TK_GRTREQ	13	// >=
-#define TK_EQ		14	// =
-#define TK_NOTEQ	15	// !=
-#define TK_AND		16	// &
-#define TK_OR		17	// |
-#define TK_XOR		18	// ^
-#define TK_LOGAND	19	// and
-#define TK_LOGOR	20	// or
-#define TK_LOGXOR	21	// xor
+#define TK_ASSIGNOP_START 	0
+#define TK_ASSIGN			TK_ASSIGNOP_START+0		// :
+// binary operators
+#define TK_BINARYOP_START 	1
+#define TK_DOT				TK_BINARYOP_START+0		// .
+#define TK_PIPE				TK_BINARYOP_START+1		// ->
+#define TK_MULT				TK_BINARYOP_START+2		// *
+#define TK_DIV				TK_BINARYOP_START+3		// /
+#define TK_MOD				TK_BINARYOP_START+4		// %
+#define TK_ADD				TK_BINARYOP_START+5		// +
+#define TK_SUB				TK_BINARYOP_START+6		// -    
+#define TK_LSHFT			TK_BINARYOP_START+7		// <<
+#define TK_RSHFT			TK_BINARYOP_START+8		// >>
+#define TK_LESS				TK_BINARYOP_START+9		// <
+#define TK_LESSEQ			TK_BINARYOP_START+10	// <=
+#define TK_GRTR				TK_BINARYOP_START+11	// >
+#define TK_GRTREQ			TK_BINARYOP_START+12	// >=
+#define TK_EQ				TK_BINARYOP_START+13	// =
+#define TK_NOTEQ			TK_BINARYOP_START+14	// !=
+#define TK_AND				TK_BINARYOP_START+15	// &
+#define TK_OR				TK_BINARYOP_START+16	// |
+#define TK_XOR				TK_BINARYOP_START+17	// ^
+#define TK_LOGAND			TK_BINARYOP_START+18	// and
+#define TK_LOGOR			TK_BINARYOP_START+19	// or
+#define TK_LOGXOR			TK_BINARYOP_START+20	// xor
 // unary operators
-#define TK_NEG		23	// -
-#define TK_NOT		24	// ~
-#define TK_LOGNOT	25	// not
+#define TK_UNARYOP_START 	23
+#define TK_NEG				TK_UNARYOP_START+0		// -
+#define TK_NOT				TK_UNARYOP_START+1		// ~
+#define TK_LOGNOT			TK_UNARYOP_START+2		// not
 // other
-#define TK_LBRACE	26	// {
-#define TK_RBRACE	27	// }
-#define TK_LPAREN	28	// (
-#define TK_RPAREN	29	// )
+#define TK_OTHER_START 		26
+#define TK_LBRACE			TK_OTHER_START+0		// {
+#define TK_RBRACE			TK_OTHER_START+1		// }
+#define TK_LPAREN			TK_OTHER_START+2		// (
+#define TK_RPAREN			TK_OTHER_START+3		// )
 // keywords
-#define TK_NONE		128
-#define TK_BOOL		129
-#define TK_NUM		130
-#define TK_STR		131
-#define TK_FROM		132
-#define TK_TAKE		133
-#define TK_MUT		134
-#define TK_FUNC		135
-#define TK_RET		136
-#define TK_BRK		137
-#define TK_CONT		138
-#define TK_FOR		139
-#define TK_IN		140
-#define TK_WHILE	141
-#define TK_DO		142
-#define TK_IF		143
-#define TK_ELIF		144
-#define TK_ELSE		145
-// symbol
-#define TK_SYMBOL	256
+#define TK_KEYWORDS_START 	128
+#define TK_NONE				TK_KEYWORDS_START+0	
+#define TK_BOOL				TK_KEYWORDS_START+1	
+#define TK_NUM				TK_KEYWORDS_START+2	
+#define TK_STR				TK_KEYWORDS_START+3	
+#define TK_FROM				TK_KEYWORDS_START+4	
+#define TK_TAKE				TK_KEYWORDS_START+5	
+#define TK_MUT				TK_KEYWORDS_START+6	
+#define TK_FUNC				TK_KEYWORDS_START+7	
+#define TK_RET				TK_KEYWORDS_START+8	
+#define TK_BRK				TK_KEYWORDS_START+9	
+#define TK_CONT				TK_KEYWORDS_START+10
+#define TK_FOR				TK_KEYWORDS_START+11
+#define TK_IN				TK_KEYWORDS_START+12
+#define TK_WHILE			TK_KEYWORDS_START+13
+#define TK_DO				TK_KEYWORDS_START+14
+#define TK_IF				TK_KEYWORDS_START+15
+#define TK_ELIF				TK_KEYWORDS_START+16
+#define TK_ELSE				TK_KEYWORDS_START+17
+// special
+#define TK_SPECIAL_START	256
+#define TK_SYMBOL			TK_SPECIAL_START+0
 
 #define NUM_OPERATORS 29
 static const char *operators[] = {
