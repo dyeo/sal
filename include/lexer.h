@@ -12,6 +12,7 @@ extern "C" {
 
 typedef struct __lex_state
 {
+	const char *filename;
 	int status; // the current status
 	char *buffer; // the file buffer
 	char *buffer_end; // the total length of the buffer
@@ -23,7 +24,7 @@ typedef struct __lex_state
 } 
 lex_state;
 
-lex_state *make_lex_state(char *buffer);
+lex_state *make_lex_state(const char *filename, char *buffer);
 
 void free_lex_state(lex_state *state);
 
