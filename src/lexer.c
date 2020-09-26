@@ -100,16 +100,14 @@ bool is_escape(char c, char n)
 	return c == '\\' && (strchr("abfnrtv\\\'\"\?", n) != NULL);
 }
 
-
-
 bool is_ident_start(char c)
 {
-	return c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+	return c == '_' || (c >= '@' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 bool is_ident_char(char c)
 {
-	return c == '_' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+	return c == '_' || (c >= '0' && c <= '9') || (c >= '@' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 //
@@ -142,6 +140,7 @@ void parse_next_token(lex_state *s)
 		// beginning of string found
 		if(token == '"')
 		{
+			// keep scanning until the end of the string (skipping escape sequences)
 			char *temp = s->curr;
 			do
 			{
@@ -154,8 +153,8 @@ void parse_next_token(lex_state *s)
 			while(*temp != '"');
 			++temp;
 			char *string = substr(s->curr+1, temp-1);
-			log_debug(s->filename, s->line, "STRING:\t%s", string);
-			free(string);
+			log_debug(s->filename, s->line, "  STRING\t%s", string); // TEMPORARY
+			free(string); // TEMPORARY
 			s->curr = temp;
 			return;
 		}
@@ -163,41 +162,83 @@ void parse_next_token(lex_state *s)
 		// beginning of identifier found
 		if(is_ident_start(token))
 		{
-			// begin scanning until the end of the identifier
 			char *temp = s->curr;
-			do
-			{
-				++temp;
-			}
+			// keep scanning until the end of the identifier
+			do { ++temp; }
 			while(is_ident_char(*temp));
 			// copy identifier out of buffer to store later
 			char *ident = substr(s->curr, temp);
-			// determine if this is a reserved keyword
+			// determine if this is a reserved keyword or a symbol
 			bool is_symbol = true;
 			for(int i=0;i<NUM_KEYWORDS;++i)
 			{
 				if(strcmp(ident,keywords[i]) == 0)
 				{
-					log_debug(s->filename, s->line, "KYWORD:\t%i\t(%s)", TK_KEYWORDS_START+i, ident);
+					log_debug(s->filename, s->line, " KEYWORD\t%i\t(%s)", TK_KEYWORDS_START+i, ident); // TEMPORARY
 					is_symbol = false;
 					break;
 				}
 			}
-			
+			// otherwise it's a symbol
 			if(is_symbol)
 			{
-				log_debug(s->filename, s->line, "SYMBOL:\t%i\t(%s)", TK_SYMBOL, ident);
-			}
-			
-			free(ident);
+				log_debug(s->filename, s->line, "  SYMBOL\t%i\t(%s)", TK_SYMBOL, ident); // TEMPORARY
+			}			
+			free(ident); // TEMPORARY
 			
 			s->curr = temp;
 			return;
 		}
-		//	if curr:temp in keywords:
-		//		make keyword token from ident
-		//	else
-		//		make symbol token from ident
+		
+		// beginning of number found
+		if(isdigit(token))
+		{
+			char *temp = s->curr;
+			if(token == '0' && *(temp+1) == 'x') // it's a hexadecimal number
+			{
+				temp+=2;
+				do { ++temp; }
+				while(isdigit(*temp) 
+					|| (*temp >= 'A' && *temp <= 'F')
+					|| (*temp >= 'a' && *temp <= 'f')
+				);
+			}
+			else if(token == '0' && *(temp+1) == 'b') // it's a binary number
+			{
+				temp+=2;
+				do { ++temp; }
+				while(isdigit(*temp)
+					|| (*temp >= '0' && *temp <= '1')
+					|| (*temp == '_')
+				);
+			}
+			else // it's a regular number
+			{
+				do { ++temp; }
+				while(isdigit(*temp) || *temp == '.');
+			}
+			char *number = substr(s->curr, temp);
+			log_debug(s->filename, s->line, "  NUMBER\t%s", number); // TEMPORARY
+			free(number); // TEMPORARY
+			s->curr = temp;
+			return;
+		}
+		
+		// check if operator/delimiter
+		for(int o=0;o<NUM_OPERATORS;++o)
+		{
+			char *temp = s->curr;
+			int oplen = strlen(operators[o]);
+			if(strncmp(s->curr, operators[o], oplen) == 0)
+			{
+				temp += oplen;
+				char *operator = substr(s->curr, temp);
+				log_debug(s->filename, s->line, "OPERATOR\t%i\t(%s)", TK_OPERATORS_START+o, operator); // TEMPORARY
+				free(operator); // TEMPORARY
+				s->curr = temp;
+				return;
+			}
+		}
 		
 		++s->curr;
 	}
