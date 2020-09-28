@@ -153,7 +153,7 @@ void parse_next_token(lex_state *s)
 			while(*temp != '"');
 			++temp;
 			char *string = substr(s->curr+1, temp-1);
-			log_debug(s->filename, s->line, "  STRING\t%s", string); // TEMPORARY
+			log_debug(s->filename, s->line, "  STRING\t%i\t(%s)", TK_STR_LITERAL, string); // TEMPORARY
 			free(string); // TEMPORARY
 			s->curr = temp;
 			return;
@@ -168,14 +168,30 @@ void parse_next_token(lex_state *s)
 			while(is_ident_char(*temp));
 			// copy identifier out of buffer to store later
 			char *ident = substr(s->curr, temp);
-			// determine if this is a reserved keyword or a symbol
 			bool is_symbol = true;
+			// determine if this is a bool literal
+			if(strcmp(ident,"true") == 0 || strcmp(ident,"false") == 0)
+			{
+				is_symbol = false;
+				log_debug(s->filename, s->line, "BOOLEAN\t%i\t(%s)", TK_BOOL_LITERAL, ident); // TEMPORARY
+			}				
+			// determine if this is a typename
+			for(int i=0;i<NUM_TYPENAMES;++i)
+			{
+				if(strcmp(ident,typenames[i]) == 0)
+				{
+					is_symbol = false;
+					log_debug(s->filename, s->line, "TYPENAME\t%i\t(%s)", TK_TYPENAMES_START+i, ident); // TEMPORARY
+					break;
+				}
+			}
+			// determine if this is a reserved keyword or a symbol
 			for(int i=0;i<NUM_KEYWORDS;++i)
 			{
 				if(strcmp(ident,keywords[i]) == 0)
 				{
-					log_debug(s->filename, s->line, " KEYWORD\t%i\t(%s)", TK_KEYWORDS_START+i, ident); // TEMPORARY
 					is_symbol = false;
+					log_debug(s->filename, s->line, " KEYWORD\t%i\t(%s)", TK_KEYWORDS_START+i, ident); // TEMPORARY
 					break;
 				}
 			}
@@ -218,7 +234,7 @@ void parse_next_token(lex_state *s)
 				while(isdigit(*temp) || *temp == '.');
 			}
 			char *number = substr(s->curr, temp);
-			log_debug(s->filename, s->line, "  NUMBER\t%s", number); // TEMPORARY
+			log_debug(s->filename, s->line, "  NUMBER\t%i\t(%s)", TK_NUM_LITERAL, number); // TEMPORARY
 			free(number); // TEMPORARY
 			s->curr = temp;
 			return;
