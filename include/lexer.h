@@ -13,11 +13,11 @@ extern "C" {
 typedef struct __lex_state
 {
 	const char *filename;
-	int status; // the current status
 	char *buffer; // the file buffer
 	char *buffer_end; // the total length of the buffer
 	int total_lines; // the line count of the buffer
 	char *curr; // current position in buffer
+	int col; // current column
 	int line; // the current line
 	token *tokens; // the tokens array
 	int token_count; // the number of tokens found

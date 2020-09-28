@@ -12,7 +12,6 @@ lex_state* make_lex_state(const char *filename, char* buffer)
 	lex_state* r = (lex_state*)malloc(sizeof(lex_state));
 	{
 		r->filename = filename;
-		r->status = LEXER_IN_PROGRESS;
 		r->buffer = buffer;
 		r->buffer_end = buffer + strlen(buffer);
 		r->total_lines = count_chars(buffer, '\n') + 1;
@@ -30,7 +29,7 @@ void free_lex_state(lex_state* state)
 	free(state);
 }
 
-void parse_next_token(lex_state *state);
+int parse_next_token(lex_state *state);
 
 //
 //
@@ -63,12 +62,11 @@ lex_state *lexize_from_file(const char *filename)
 	
 	lex_state* state = make_lex_state(filename, buffer);
 	
-	while(state->status == LEXER_IN_PROGRESS)
-	{
-		parse_next_token(state);
-	}
+	int status;
+	while((status = parse_next_token(state)) == LEXER_IN_PROGRESS)
+	{ }
 	
-	if(state->status == LEXER_SUCCESS)
+	if(status == LEXER_SUCCESS)
 	{
 		log_debug(filename, state->total_lines, "lexing complete");
 		return state;
@@ -85,11 +83,13 @@ bool skip_newline(lex_state *s)
 	{
 		++s->line;
 		++s->curr;
+		s->col = 0;
 		return true;
 	}
 	else if (*(s->curr) == '\r' || *(s->curr) == '\n')
 	{
 		++s->line;
+		s->col = 0;
 		return true;
 	}
 	return false;
@@ -110,10 +110,30 @@ bool is_ident_char(char c)
 	return c == '_' || (c >= '0' && c <= '9') || (c >= '@' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
+bool is_hex_num(char c)
+{
+	return (c >= '0' && c <= '9')
+		|| (c >= 'A' && c <= 'F')
+		|| (c >= 'a' && c <= 'f');
+}
+
+bool is_bin_num(char c)
+{
+	return (c >= '0' && c <= '1')
+		|| (c == '_');
+}
+
+// TODO: keep track of number of decimals: throw error if more than 1
+bool is_dec_num(char c)
+{
+	return (c >= '0' && c <= '9')
+		|| (c == '.');
+}
+
 //
 //
 //
-void parse_next_token(lex_state *s)
+int parse_next_token(lex_state *s)
 {
 	char token;
 	
@@ -123,7 +143,8 @@ void parse_next_token(lex_state *s)
 		if(skip_newline(s))
 		{
 			++s->curr;
-			return;
+			++s->col;
+			return LEXER_IN_PROGRESS;
 		}
 		
 		// ignore comments up until newline
@@ -132,9 +153,11 @@ void parse_next_token(lex_state *s)
 			while(!skip_newline(s))
 			{
 				++s->curr;
+				++s->col;
 			}
 			++s->curr;
-			return;
+			++s->col;
+			return LEXER_IN_PROGRESS;
 		}
 	
 		// beginning of string found
@@ -156,7 +179,8 @@ void parse_next_token(lex_state *s)
 			log_debug(s->filename, s->line, "  STRING\t%i\t(%s)", TK_STR_LITERAL, string); // TEMPORARY
 			free(string); // TEMPORARY
 			s->curr = temp;
-			return;
+			s->col += (temp-s->curr);
+			return LEXER_IN_PROGRESS;
 		}
 	
 		// beginning of identifier found
@@ -203,7 +227,8 @@ void parse_next_token(lex_state *s)
 			free(ident); // TEMPORARY
 			
 			s->curr = temp;
-			return;
+			s->col += (temp-s->curr);
+			return LEXER_IN_PROGRESS;
 		}
 		
 		// beginning of number found
@@ -212,32 +237,29 @@ void parse_next_token(lex_state *s)
 			char *temp = s->curr;
 			if(token == '0' && *(temp+1) == 'x') // it's a hexadecimal number
 			{
+				++s->curr;
 				temp+=2;
 				do { ++temp; }
-				while(isdigit(*temp) 
-					|| (*temp >= 'A' && *temp <= 'F')
-					|| (*temp >= 'a' && *temp <= 'f')
-				);
+				while(is_hex_num(*temp));
 			}
 			else if(token == '0' && *(temp+1) == 'b') // it's a binary number
 			{
+				++s->curr;
 				temp+=2;
 				do { ++temp; }
-				while(isdigit(*temp)
-					|| (*temp >= '0' && *temp <= '1')
-					|| (*temp == '_')
-				);
+				while(is_bin_num(*temp));
 			}
 			else // it's a regular number
 			{
 				do { ++temp; }
-				while(isdigit(*temp) || *temp == '.');
+				while(is_dec_num(*temp));
 			}
 			char *number = substr(s->curr, temp);
 			log_debug(s->filename, s->line, "  NUMBER\t%i\t(%s)", TK_NUM_LITERAL, number); // TEMPORARY
 			free(number); // TEMPORARY
 			s->curr = temp;
-			return;
+			s->col += (temp-s->curr);
+			return LEXER_IN_PROGRESS;
 		}
 		
 		// check if operator/delimiter
@@ -252,15 +274,24 @@ void parse_next_token(lex_state *s)
 				log_debug(s->filename, s->line, "OPERATOR\t%i\t(%s)", TK_OPERATORS_START+o, operator); // TEMPORARY
 				free(operator); // TEMPORARY
 				s->curr = temp;
-				return;
+				s->col += (temp-s->curr);
+				return LEXER_IN_PROGRESS;
 			}
 		}
 		
-		++s->curr;
-	}
-	
-	if(s->curr >= s->buffer_end)
-	{
-		s->status = LEXER_SUCCESS;
+		if(isspace(token))
+		{
+			++s->curr;
+			++s->col;
+			return LEXER_IN_PROGRESS;
+		}
+		
+		if(s->curr >= s->buffer_end || token == '\0')
+		{
+			return LEXER_SUCCESS;
+		}
+		
+		log_error(s->filename, s->line, "unidentified token '%c' at col %i", token, s->col);
+		return LEXER_ERROR;
 	}
 }
