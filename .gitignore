@@ -1,3 +1,9 @@
+### Project-Specific ###
+*.exe
+*.exe.stackdump
+/build/
+/.vscode/
+
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt
