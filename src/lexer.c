@@ -23,7 +23,6 @@ lex_state* make_lex_state(const unsigned char *filename, unsigned char* buffer)
 		r->tokens = 0;
 		r->token_count = 0;
 	}
-
 	return r;
 }
 
@@ -120,6 +119,17 @@ bool is_dec_num(unsigned char c)
 //
 int parse_next_token(lex_state *s)
 {
+	// exceeded file buffer somehow
+	if(s->curr >= s->buffer_end)
+	{
+		log_fatal("read past the file buffer");
+		return LEXER_ERROR;
+	}
+	// end of string (file) found
+	if(*s->curr == '\0')
+	{
+		return LEXER_SUCCESS;
+	}
 	// windows newline
 	if(*(s->curr) == '\r' && *(s->curr+1) == '\n')
 	{
@@ -288,11 +298,6 @@ int parse_next_token(lex_state *s)
 			free(operator); // TEMPORARY
 			return LEXER_IN_PROGRESS;
 		}
-	}
-	// end of string (file) found
-	if(s->curr >= s->buffer_end || *s->curr == '\0')
-	{
-		return LEXER_SUCCESS;
 	}
 	// unexpected token (fall-through)
 	logf_error(s->filename, s->line, s->col, "unidentified token '%c'", *s->curr);
