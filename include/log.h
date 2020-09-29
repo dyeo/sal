@@ -1,49 +1,100 @@
-/**
- * Copyright (c) 2020 rxi
- *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the MIT license. See `log.c` for details.
- */
+#ifndef _SAL_LOG_H_
+#define _SAL_LOG_H_
 
-#ifndef LOG_H
-#define LOG_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#include <time.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <stdbool.h>
-#include <time.h>
 
-#define LOG_VERSION "0.1.0"
+#define _LOG_LEVEL_TRACE 0
+#define _LOG_LEVEL_DEBUG 1
+#define _LOG_LEVEL_INFO 2
+#define _LOG_LEVEL_WARNING 3
+#define _LOG_LEVEL_ERROR 4
+#define _LOG_LEVEL_FATAL 5
 
-typedef struct {
-  va_list ap;
-  const char *fmt;
-  const char *file;
-  struct tm *time;
-  void *udata;
-  int line;
-  int level;
-} log_Event;
+#define log_trace(...) __log(_LOG_LEVEL_TRACE, __VA_ARGS__)
+#define log_debug(...) __log(_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define log_info(...) __log(_LOG_LEVEL_INFO, __VA_ARGS__)
+#define log_warn(...) __log(_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define log_error(...) __log(_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define log_fatal(...) __log(_LOG_LEVEL_FATAL, __VA_ARGS__)
 
-typedef void (*log_LogFn)(log_Event *ev);
-typedef void (*log_LockFn)(bool lock, void *udata);
+#define logf_trace(FILE, LINE, COL, ...) __logf(_LOG_LEVEL_TRACE, FILE, LINE, COL, __VA_ARGS__)
+#define logf_debug(FILE, LINE, COL, ...) __logf(_LOG_LEVEL_DEBUG, FILE, LINE, COL, __VA_ARGS__)
+#define logf_info(FILE, LINE, COL, ...)	__logf(_LOG_LEVEL_INFO, FILE, LINE, COL, __VA_ARGS__)
+#define logf_warn(FILE, LINE, COL, ...) __logf(_LOG_LEVEL_WARNING, FILE, LINE, COL, __VA_ARGS__)
+#define logf_error(FILE, LINE, COL, ...) __logf(_LOG_LEVEL_ERROR, FILE, LINE, COL, __VA_ARGS__)
+#define logf_fatal(FILE, LINE, COL, ...) __logf(_LOG_LEVEL_FATAL, FILE, LINE, COL, __VA_ARGS__)
 
-enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+static const char *_fmt[] = {
+	"TRACE ",
+	"DEBUG ",
+	" INFO ",
+	" WARN ",
+	"ERROR ",
+	"FATAL "
+};
 
-#define log_trace(FILE, LINE, ...) log_log(LOG_TRACE, FILE, LINE, __VA_ARGS__)
-#define log_debug(FILE, LINE, ...) log_log(LOG_DEBUG, FILE, LINE, __VA_ARGS__)
-#define log_info(FILE, LINE, ...)  log_log(LOG_INFO,  FILE, LINE, __VA_ARGS__)
-#define log_warn(FILE, LINE, ...)  log_log(LOG_WARN,  FILE, LINE, __VA_ARGS__)
-#define log_error(FILE, LINE, ...) log_log(LOG_ERROR, FILE, LINE, __VA_ARGS__)
-#define log_fatal(FILE, LINE, ...) log_log(LOG_FATAL, FILE, LINE, __VA_ARGS__)
+static const char *_col[] = {
+	"\e[0;36m",
+	"\e[0;32m",
+	"\e[0;35m",
+	"\e[01;33m",
+	"\e[0;31m",
+	"\e[1;31m"
+};
 
-const char* log_level_string(int level);
-void log_set_lock(log_LockFn fn, void *udata);
-void log_set_level(int level);
-void log_set_quiet(bool enable);
-int log_add_callback(log_LogFn fn, void *udata, int level);
-int log_add_fp(FILE *fp, int level);
+inline static
+void __log_time()
+{
+	time_t rawtime;
+	struct tm *timeinfo;
+	char buffer [9];
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);	
+	strftime(buffer, 9,"%H:%M:%S", timeinfo);
+    printf("\e[90m%s\e[0m ", buffer);
+}
 
-void log_log(int level, const char *file, int line, const char *fmt, ...);
+inline static
+void __log_level(const int level)
+{	
+	printf(_col[level]);
+	printf(_fmt[level]);
+	printf("\e[0m");
+}
 
+inline static
+void __log(const int level, const char *fmt, ...)
+{
+	__log_time();
+	__log_level(level);
+	va_list argptr;
+	va_start(argptr, fmt);
+	vfprintf(stdout, fmt, argptr);
+	va_end(argptr);
+	printf("\n");
+}
+
+inline static
+void __logf(const int level, const char *file, const int line, const int col, const char *fmt, ...)
+{
+	__log_time();
+	__log_level(level);
+	printf("\e[90m%s:%i:%i\e[0m ", file, line, col);
+	va_list argptr;
+	va_start(argptr, fmt);
+	vfprintf(stdout, fmt, argptr);
+	va_end(argptr);
+	printf("\n");
+}
+
+#ifdef __cplusplus
+}
 #endif
+
+#endif//_SAL_LOG_H_

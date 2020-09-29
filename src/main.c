@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {	
 	if(argc < 2) 
 	{
-		log_fatal("sal", -1, "no entry file specified\n");
+		log_fatal("no entry file specified\n");
 		return 1;
 	}
 	
