@@ -235,7 +235,9 @@ int parse_next_token(lex_state *s)
 		return LEXER_IN_PROGRESS;
 	}
 	// beginning of number found
-	if(isdigit(*s->curr))
+	if(isdigit(*s->curr) 
+		|| *s->curr == '-' && isdigit(*(s->curr+1))
+		|| *s->curr == '.' && isdigit(*(s->curr+1)))
 	{
 		unsigned char *temp = s->curr;
 		if(*s->curr == '0' && *(temp+1) == 'x') // it's a hexadecimal number
@@ -252,7 +254,20 @@ int parse_next_token(lex_state *s)
 		}
 		else // it's a regular number
 		{
-			do { ++temp; }
+			int dec = 0;
+			do 
+			{
+				if(*temp == '.')
+				{
+					++dec;
+					if(dec > 1)
+					{
+						logf_error(s->filename, s->line, s->col, "too many decimal points in number");
+						return LEXER_ERROR;
+					}
+				}
+				++temp;				
+			}
 			while(is_dec_num(*temp));
 		}
 		unsigned char *number = substr(s->curr, temp);
