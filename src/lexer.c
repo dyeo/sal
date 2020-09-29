@@ -109,7 +109,6 @@ bool is_bin_num(unsigned char c)
 		|| (c == '_');
 }
 
-// TODO: keep track of number of decimals: throw error if more than 1
 bool is_dec_num(unsigned char c)
 {
 	return (c >= '0' && c <= '9')
@@ -190,10 +189,7 @@ int parse_next_token(lex_state *s)
 	{
 		unsigned char *temp = s->curr;
 		// keep scanning until the end of the identifier
-		do
-		{
-			++temp;
-		}
+		do { ++temp; }
 		while(is_ident_char(*temp));
 		// copy identifier out of buffer to store later
 		unsigned char *ident = substr(s->curr, temp);
