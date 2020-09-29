@@ -125,8 +125,8 @@ int parse_next_token(lex_state *s)
 	if(*(s->curr) == '\r' && *(s->curr+1) == '\n')
 	{
 		++s->line;
-		s->curr+=2;
 		s->col = 1;
+		s->curr+=2;
 		return LEXER_IN_PROGRESS;
 	}
 	// other newlines
@@ -134,15 +134,22 @@ int parse_next_token(lex_state *s)
 	{
 		printf("%c", '\n');
 		++s->line;
-		s->curr+=1;
 		s->col = 1;
+		s->curr+=1;
 		return LEXER_IN_PROGRESS;
 	}
 	// ignore whitespace
 	if(isspace(*s->curr))
 	{
+		if(*s->curr == '\t')
+		{
+			s->col += 4;
+		}
+		else
+		{
+			++s->col;
+		}
 		++s->curr;
-		++s->col;
 		//logf_debug(s->filename, s->line, s->col, "\e[90mSPACE\e[0m");
 		return LEXER_IN_PROGRESS;
 	}	
