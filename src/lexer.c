@@ -68,12 +68,7 @@ lex_state *lexize_from_file(const unsigned char *filename)
 	
 	int status;
 	while((status = parse_next_token(state)) == LEXER_IN_PROGRESS)
-	{
-		log_trace("%i", state->curr-state->buffer);
-	}
-	
-	log_debug("length: %i", utf8size(state->buffer));
-	log_debug("index: %i", state->curr-state->buffer);
+	{ }
 
 	if(status == LEXER_SUCCESS)
 	{
@@ -132,7 +127,6 @@ int parse_next_token(lex_state *s)
 		++s->line;
 		s->curr+=2;
 		s->col = 1;
-		logf_debug(s->filename, s->line, s->col, "\e[90mNEWLINE (2)\e[0m");
 		return LEXER_IN_PROGRESS;
 	}
 	// other newlines
@@ -141,7 +135,6 @@ int parse_next_token(lex_state *s)
 		++s->line;
 		s->curr+=1;
 		s->col = 1;
-		logf_debug(s->filename, s->line, s->col, "\e[90mNEWLINE (1)\e[0m");
 		return LEXER_IN_PROGRESS;
 	}
 	// ignore whitespace
@@ -160,7 +153,6 @@ int parse_next_token(lex_state *s)
 		{ ++temp; }		
 		s->col += (temp-s->curr);
 		s->curr = temp;
-		logf_debug(s->filename, s->line, s->col, "\e[90mCOMMENT\e[0m");
 		return LEXER_IN_PROGRESS;
 	}
 	// beginning of string found
@@ -281,7 +273,6 @@ int parse_next_token(lex_state *s)
 	// end of string (file) found
 	if(s->curr >= s->buffer_end || *s->curr == '\0')
 	{
-		log_debug("\e[90mEOF\e[0m");
 		return LEXER_SUCCESS;
 	}
 	// unexpected token (fall-through)
