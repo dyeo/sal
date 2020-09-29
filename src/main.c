@@ -3,9 +3,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <locale.h>
 
 int main(int argc, char* argv[])
-{	
+{
+	setlocale(LC_ALL, "");
+	
 	if(argc < 2) 
 	{
 		log_fatal("no entry file specified\n");

@@ -13,10 +13,10 @@ extern "C" {
 typedef struct __lex_state
 {
 	const char *filename;
-	char *buffer; // the file buffer
-	char *buffer_end; // the total length of the buffer
+	unsigned char *buffer; // the file buffer
+	unsigned char *buffer_end; // the total length of the buffer
 	int total_lines; // the line count of the buffer
-	char *curr; // current position in buffer
+	unsigned char *curr; // current position in buffer
 	int col; // current column
 	int line; // the current line
 	token *tokens; // the tokens array
@@ -24,11 +24,11 @@ typedef struct __lex_state
 } 
 lex_state;
 
-lex_state *make_lex_state(const char *filename, char *buffer);
+lex_state *make_lex_state(const unsigned char *filename, unsigned char *buffer);
 
 void free_lex_state(lex_state *state);
 
-lex_state *lexize_from_file(const char *filename);
+lex_state *lexize_from_file(const unsigned char *filename);
 
 #ifdef __cplusplus
 }

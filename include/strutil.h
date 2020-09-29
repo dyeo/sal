@@ -5,19 +5,27 @@
 extern "C" {
 #endif
 
+#include "utf8.h"
+
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <unistd.h>
 
 static inline
 int count_chars(const char *str, char chr)
 {
-    const char *p = str;
+    const char *tmp = str;
     int count = 0;
-    do {
-        if (*p == chr)
-            count++;
-    } while (*(p++));
+    while(tmp != NULL)
+	{
+		tmp = utf8chr(tmp, chr);
+		if(tmp)
+		{
+			++tmp;
+			++count;
+		}
+	}
     return count;
 }
 

@@ -68,7 +68,7 @@ extern "C" {
 #define TK_STR_LITERAL		TK_SPECIAL_START+3
 
 #define NUM_OPERATORS 30
-static const char *operators[] = {
+static const unsigned char *operators[] = {
 	":", 
 	".", "->",
 	"*", "/", "%",
@@ -85,12 +85,12 @@ static const char *operators[] = {
 };
 
 #define NUM_TYPENAMES 4
-static const char *typenames[] = {
+static const unsigned char *typenames[] = {
 	"none", "bool", "num", "str"
 };
 
 #define NUM_KEYWORDS 14
-static const char *keywords[] = {
+static const unsigned char *keywords[] = {
 	"from", "take",
 	"mut", "func",
 	"ret", "brk", "cont",
@@ -108,7 +108,7 @@ typedef struct __token
 	{
 		bool boolean;
 		long number;
-		char *string;
+		unsigned char *string;
 	} data;
 } 
 token;
