@@ -132,6 +132,7 @@ int parse_next_token(lex_state *s)
 	// other newlines
 	if (*(s->curr) == '\r' || *(s->curr) == '\n')
 	{
+		printf("%c", '\n');
 		++s->line;
 		s->curr+=1;
 		s->col = 1;
