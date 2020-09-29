@@ -40,6 +40,19 @@ unsigned char *substr(unsigned char *beg, unsigned char *end)
 	return res;
 }
 
+/* replaces all occurrences of a given character in a string */
+static inline
+unsigned char *repchr(unsigned char *str, unsigned char fnd, unsigned char rep)
+{
+	unsigned char *cur = strchr(str,fnd);
+    while (cur)
+	{
+        *cur = rep;
+        cur = utf8chr(cur,fnd);
+    }
+    return str;
+}
+
 #ifdef __cplusplus
 }
 #endif
