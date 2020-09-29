@@ -12,10 +12,11 @@ extern "C" {
 #include <string.h>
 #include <unistd.h>
 
+/* counts the number of occurrences of a character in a given string */
 static inline
-int count_chars(const char *str, char chr)
+size_t cntchr(const unsigned char *str, unsigned char chr)
 {
-    const char *tmp = str;
+    const unsigned char *tmp = str;
     int count = 0;
     while(tmp != NULL)
 	{
@@ -29,12 +30,9 @@ int count_chars(const char *str, char chr)
     return count;
 }
 
-/*
-Returns a substring of the string given by the pointer range [beg, end).
-This string is allocated and must be freed later.
-*/
+/* returns a new null-terminated substring of the string given by the pointer range [beg, end) */
 static inline
-char *substr(char *beg, char *end)
+unsigned char *substr(unsigned char *beg, unsigned char *end)
 {
 	char *res = (char*)malloc(end-beg+1);
 	memcpy(res, beg, end-beg);

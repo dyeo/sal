@@ -16,7 +16,7 @@ lex_state* make_lex_state(const unsigned char *filename, unsigned char* buffer)
 		r->filename = filename;
 		r->buffer = buffer;
 		r->buffer_end = buffer + utf8size(buffer);
-		r->total_lines = count_chars(buffer, '\n') + 1;
+		r->total_lines = cntchr(buffer, '\n') + 1;
 		r->curr = buffer;
 		r->col = 1;
 		r->line = 1;
