@@ -53,6 +53,12 @@ unsigned char *repchr(unsigned char *str, unsigned char fnd, unsigned char rep)
     return str;
 }
 
+static inline
+bool strtob(const unsigned char *str)
+{
+	return utf8cmp(str,"false") ? false : true;
+}
+
 #ifdef __cplusplus
 }
 #endif

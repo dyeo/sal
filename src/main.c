@@ -17,6 +17,11 @@ int main(int argc, char* argv[])
 	
 	lex_state *state = lexize_from_file(argv[1]);
 	
+	for(int i=0;i<state->token_count;++i)
+	{
+		log_debug("%i", state->tokens[i].value);
+	}
+	
 	if(state != NULL)
 	{
 		free_lex_state(state);

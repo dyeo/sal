@@ -104,12 +104,12 @@ typedef struct __token
 	unsigned short value;
 	unsigned int line;
 	unsigned int col;
-	union __data
+	union
 	{
 		bool boolean;
-		long number;
+		double number;
 		unsigned char *string;
-	} data;
+	};
 } 
 token;
 

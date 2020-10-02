@@ -20,7 +20,7 @@ lex_state* make_lex_state(const unsigned char *filename, unsigned char* buffer)
 		r->curr = buffer;
 		r->col = 1;
 		r->line = 1;
-		r->tokens = 0;
+		r->tokens = NULL;
 		r->token_count = 0;
 	}
 	return r;
@@ -78,6 +78,18 @@ lex_state *lexize_from_file(const unsigned char *filename)
 	log_fatal("lexing failed - see above errors");
 	free_lex_state(state);
 	return NULL;
+}
+
+void insert_next_token(token tok, lex_state *s)
+{
+	token *old_tokens = s->tokens;
+	s->tokens = malloc(sizeof(token) * s->token_count+1);
+	for(int i=0;i<s->token_count;++i)
+	{
+		s->tokens[i] = old_tokens[i];
+	}
+	s->tokens[s->token_count] = tok;
+	s->token_count+=1;
 }
 
 bool is_escape(unsigned char c, unsigned char n)
@@ -190,8 +202,13 @@ int parse_next_token(lex_state *s)
 		unsigned char *string = substr(s->curr+1, temp-1);
 		s->col += (temp-s->curr);
 		s->curr = temp;
-		logf_debug(s->filename, s->line, s->col, "  STRING\t%i\t(%s)", TK_STR_LITERAL, string); // TEMPORARY
-		free(string); // TEMPORARY
+		token tok = {
+			.value=TK_STR_LITERAL,
+			.line=s->line,
+			.col=s->col,
+			.string=string
+		};
+		insert_next_token(tok, s);
 		return LEXER_IN_PROGRESS;
 	}
 	// beginning of identifier found
@@ -210,15 +227,28 @@ int parse_next_token(lex_state *s)
 		if(utf8cmp(ident,"true") == 0 || strcmp(ident,"false") == 0)
 		{
 			is_symbol = false;
-			logf_debug(s->filename, s->line, s->col, "BOOLEAN\t%i\t(%s)", TK_BOOL_LITERAL, ident); // TEMPORARY
-		}				
+			token tok = {
+				.value=TK_BOOL_LITERAL,
+				.line=s->line,
+				.col=s->col,
+				.boolean=strtob(ident)
+			};
+			insert_next_token(tok, s);
+			free(ident);
+		}
 		// determine if this is a typename
 		for(int i=0;i<NUM_TYPENAMES;++i)
 		{
 			if(utf8cmp(ident,typenames[i]) == 0)
 			{
 				is_symbol = false;
-				logf_debug(s->filename, s->line, s->col, "TYPENAME\t%i\t(%s)", TK_TYPENAMES_START+i, ident); // TEMPORARY
+				token tok = {
+					.value=TK_TYPENAMES_START+i,
+					.line=s->line,
+					.col=s->col,
+				};
+				insert_next_token(tok, s);
+				free(ident);
 				break;
 			}
 		}
@@ -228,16 +258,27 @@ int parse_next_token(lex_state *s)
 			if(utf8cmp(ident,keywords[i]) == 0)
 			{
 				is_symbol = false;
-				logf_debug(s->filename, s->line, s->col, " KEYWORD\t%i\t(%s)", TK_KEYWORDS_START+i, ident); // TEMPORARY
+				token tok = {
+					.value=TK_KEYWORDS_START+i,
+					.line=s->line,
+					.col=s->col,
+				};
+				insert_next_token(tok, s);
+				free(ident);
 				break;
 			}
 		}
 		// otherwise it's a symbol
 		if(is_symbol)
 		{
-			logf_debug(s->filename, s->line, s->col, "  SYMBOL\t%i\t(%s)", TK_SYMBOL, ident); // TEMPORARY
-		}			
-		free(ident); // TEMPORARY
+			token tok = {
+				.value=TK_SYMBOL,
+				.line=s->line,
+				.col=s->col,
+				.string=ident
+			};
+			insert_next_token(tok, s);
+		}// TEMPORARY
 		return LEXER_IN_PROGRESS;
 	}
 	// beginning of number found
@@ -246,19 +287,19 @@ int parse_next_token(lex_state *s)
 		|| *s->curr == '.' && isdigit(*(s->curr+1)))
 	{
 		unsigned char *temp = s->curr;
-		if(*s->curr == '0' && *(temp+1) == 'x') // it's a hexadecimal number
-		{
-			temp+=2;
-			do { ++temp; }
-			while(is_hex_num(*temp));
-		}
-		else if(*s->curr == '0' && *(temp+1) == 'b') // it's a binary number
-		{
-			temp+=2;
-			do { ++temp; }
-			while(is_bin_num(*temp));
-		}
-		else // it's a regular number
+		//if(*s->curr == '0' && *(temp+1) == 'x') // it's a hexadecimal number
+		//{
+		//	temp+=2;
+		//	do { ++temp; }
+		//	while(is_hex_num(*temp));
+		//}
+		//else if(*s->curr == '0' && *(temp+1) == 'b') // it's a binary number
+		//{
+		//	temp+=2;
+		//	do { ++temp; }
+		//	while(is_bin_num(*temp));
+		//}
+		//else // it's a regular number
 		{
 			int dec = 0;
 			do 
@@ -279,7 +320,13 @@ int parse_next_token(lex_state *s)
 		unsigned char *number = substr(s->curr, temp);
 		s->col += (temp-s->curr);
 		s->curr = temp;
-		logf_debug(s->filename, s->line, s->col, "  NUMBER\t%i\t(%s)", TK_NUM_LITERAL, number); // TEMPORARY
+		token tok = {
+			.value=TK_NUM_LITERAL,
+			.line=s->line,
+			.col=s->col,
+			.number=strtod(number, NULL)
+		};
+		insert_next_token(tok, s);
 		free(number); // TEMPORARY
 		return LEXER_IN_PROGRESS;
 	}
@@ -294,7 +341,12 @@ int parse_next_token(lex_state *s)
 			unsigned char *operator = substr(s->curr, temp);
 			s->col += (temp-s->curr);
 			s->curr = temp;
-			logf_debug(s->filename, s->line, s->col, "OPERATOR\t%i\t(%s)", TK_OPERATORS_START+o, operator); // TEMPORARY
+			token tok = {
+				.value=TK_OPERATORS_START+o,
+				.line=s->line,
+				.col=s->col
+			};
+			insert_next_token(tok, s);
 			free(operator); // TEMPORARY
 			return LEXER_IN_PROGRESS;
 		}
