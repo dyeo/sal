@@ -25,8 +25,6 @@ typedef struct __lex_state
 } 
 lex_state;
 
-lex_state *make_lex_state(const unsigned char *filename, unsigned char *buffer);
-
 void free_lex_state(lex_state *state);
 
 lex_state *lexize_from_file(const unsigned char *filename);
