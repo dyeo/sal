@@ -215,7 +215,6 @@ int parse_next_token(lex_state *s)
 			.col=s->col,
 			.string=string
 		};
-		log_trace("symbol ptr : %p", tok.string);
 		insert_next_token(s, tok);
 		return LEXER_IN_PROGRESS;
 	}
@@ -284,7 +283,6 @@ int parse_next_token(lex_state *s)
 			.col=s->col,
 			.string=ident // not being assigned properly???
 		};
-		log_trace("symbol ptr : %p", tok.string);
 		insert_next_token(s, tok);
 		return LEXER_IN_PROGRESS;
 	}
