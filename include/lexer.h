@@ -20,6 +20,7 @@ typedef struct __lex_state
 	int col; // current column
 	int line; // the current line
 	token *tokens; // the tokens array
+	int token_capacity;
 	int token_count; // the number of tokens found
 } 
 lex_state;

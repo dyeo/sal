@@ -21,15 +21,18 @@ lex_state* make_lex_state(const unsigned char *filename, unsigned char* buffer)
 		r->col = 1;
 		r->line = 1;
 		r->tokens = NULL;
+		r->token_capacity = 16;
 		r->token_count = 0;
 	}
 	return r;
 }
 
-void free_lex_state(lex_state* state)
+void free_lex_state(lex_state* s)
 {
-	free(state->buffer);
-	free(state);
+	free(s->buffer);
+	free(s->tokens);
+	s->token_capacity = 0;
+	s->token_count = 0;
 }
 
 int parse_next_token(lex_state *state);
@@ -80,14 +83,18 @@ lex_state *lexize_from_file(const unsigned char *filename)
 	return NULL;
 }
 
-void insert_next_token(token tok, lex_state *s)
+void insert_next_token(lex_state *s, token tok)
 {
-	token *old_tokens = s->tokens;
-	s->tokens = malloc(sizeof(token) * s->token_count+1);
-	for(int i=0;i<s->token_count;++i)
+	if(s->tokens == NULL)
 	{
-		s->tokens[i] = old_tokens[i];
+		s->tokens = malloc(s->token_capacity * sizeof(token));
 	}
+	else if(s->token_count == s->token_capacity)
+	{
+		s->tokens = realloc(s->tokens, sizeof(token) * s->token_capacity*2);
+		s->token_capacity *= 2;
+	}
+	
 	s->tokens[s->token_count] = tok;
 	s->token_count+=1;
 }
@@ -208,7 +215,8 @@ int parse_next_token(lex_state *s)
 			.col=s->col,
 			.string=string
 		};
-		insert_next_token(tok, s);
+		log_trace("symbol ptr : %p", tok.string);
+		insert_next_token(s, tok);
 		return LEXER_IN_PROGRESS;
 	}
 	// beginning of identifier found
@@ -233,8 +241,9 @@ int parse_next_token(lex_state *s)
 				.col=s->col,
 				.boolean=strtob(ident)
 			};
-			insert_next_token(tok, s);
+			insert_next_token(s, tok);
 			free(ident);
+			return LEXER_IN_PROGRESS;
 		}
 		// determine if this is a typename
 		for(int i=0;i<NUM_TYPENAMES;++i)
@@ -247,12 +256,12 @@ int parse_next_token(lex_state *s)
 					.line=s->line,
 					.col=s->col,
 				};
-				insert_next_token(tok, s);
+				insert_next_token(s, tok);
 				free(ident);
-				break;
+				return LEXER_IN_PROGRESS;
 			}
 		}
-		// determine if this is a reserved keyword or a symbol
+		// determine if this is a reserved keyword
 		for(int i=0;i<NUM_KEYWORDS;++i)
 		{
 			if(utf8cmp(ident,keywords[i]) == 0)
@@ -261,24 +270,22 @@ int parse_next_token(lex_state *s)
 				token tok = {
 					.value=TK_KEYWORDS_START+i,
 					.line=s->line,
-					.col=s->col,
+					.col=s->col
 				};
-				insert_next_token(tok, s);
+				insert_next_token(s, tok);
 				free(ident);
-				break;
+				return LEXER_IN_PROGRESS;
 			}
 		}
 		// otherwise it's a symbol
-		if(is_symbol)
-		{
-			token tok = {
-				.value=TK_SYMBOL,
-				.line=s->line,
-				.col=s->col,
-				.string=ident
-			};
-			insert_next_token(tok, s);
-		}// TEMPORARY
+		token tok = {
+			.value=TK_SYMBOL,
+			.line=s->line,
+			.col=s->col,
+			.string=ident // not being assigned properly???
+		};
+		log_trace("symbol ptr : %p", tok.string);
+		insert_next_token(s, tok);
 		return LEXER_IN_PROGRESS;
 	}
 	// beginning of number found
@@ -326,8 +333,8 @@ int parse_next_token(lex_state *s)
 			.col=s->col,
 			.number=strtod(number, NULL)
 		};
-		insert_next_token(tok, s);
-		free(number); // TEMPORARY
+		insert_next_token(s, tok);
+		free(number);
 		return LEXER_IN_PROGRESS;
 	}
 	// check if operator/delimiter
@@ -346,8 +353,8 @@ int parse_next_token(lex_state *s)
 				.line=s->line,
 				.col=s->col
 			};
-			insert_next_token(tok, s);
-			free(operator); // TEMPORARY
+			insert_next_token(s, tok);
+			free(operator);
 			return LEXER_IN_PROGRESS;
 		}
 	}

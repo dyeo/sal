@@ -5,9 +5,9 @@ fizzbuzz: func(value)
 	; cast value to an int
 	variable™: value->int
 	ret 
-		if i % 15.0 = 0 { "Fizz\"Buzz" }
-		elif i % 0b11 = 0 { "Fizz" }
-		elif i % 0x05 = 0 { "Buzz" }
+		if i % 15 = 0 { "Fizz\"Buzz" }
+		elif i % 3 = 0 { "Fizz" }
+		elif i % 5 = 0 { "Buzz" }
 		else { str(i) }
 }
 

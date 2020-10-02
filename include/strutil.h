@@ -32,11 +32,12 @@ size_t cntchr(const unsigned char *str, unsigned char chr)
 
 /* returns a new null-terminated substring of the string given by the pointer range [beg, end) */
 static inline
-unsigned char *substr(unsigned char *beg, unsigned char *end)
+unsigned char *substr(const unsigned char *beg, const unsigned char *end)
 {
-	char *res = (char*)malloc(end-beg+1);
-	memcpy(res, beg, end-beg);
-	res[end-beg] = '\0';
+	int size = (end-beg)+1;
+	unsigned char *res = (unsigned char *)malloc(sizeof(unsigned char *) * size);
+	memcpy(res, beg, size-1);
+	res[size-1] = 0;
 	return res;
 }
 
