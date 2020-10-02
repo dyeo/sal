@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "parser.h"
 #include "token.h"
 #include "log.h"
 
@@ -16,7 +17,17 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	
-	lex_state *state = lexize_from_file(argv[1]);
+	lex_state *lstate = lexize_from_file(argv[1]);
+	
+	if(lstate != NULL)
+	{
+		parse_state *pstate = parse(lstate);
+		free_lex_state(lstate);
+		
+		// next pass here		
+	}
+	
+	
 	
 	//for(int i=0;i<state->token_count;++i)
 	//{
@@ -50,11 +61,6 @@ int main(int argc, char* argv[])
 	//		log_debug("operator (%i) : %s", tok.value, operators[tok.value-TK_OPERATORS_START]);
 	//	}
 	//}
-	
-	if(state != NULL)
-	{
-		free_lex_state(state);
-	}
 	
 	return 0;
 }
